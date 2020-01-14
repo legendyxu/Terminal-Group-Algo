@@ -1,0 +1,9 @@
+[package]
+name = "test_algo"
+version = "0.1.0"
+authors = ["Junaid Nomani <junaid@correlation-one.com>"]
+edition = "2018"
+
+[dependencies]
+rustc-serialize = "0.3.24"
+time = "0.1.42"
