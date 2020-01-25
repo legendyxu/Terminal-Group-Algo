@@ -93,6 +93,7 @@ class AlgoStrategy(gamelib.AlgoCore):
     right_wing_attack_deploy_location = [[11,2], [10,3]]
     scrambleers_deploy_location1  = []
     scrambleers_deploy_location2  = []
+
     attack_next_turn = 0
     on_left_wing_attack_spawn_pos = [[0, 13], [2, 13], [25, 13], [26, 13], [27, 13], [3, 12], [24, 12], [4, 11], [23, 11], [5, 10], [22, 10], [6, 9], [21, 9], [7, 8], [20, 8], [8, 7], [19, 7], [9, 6], [10, 6], [11, 6], [16, 6], [17, 6], [18, 6]]
     on_right_wing_attack_spawn_pos = [[0, 13], [1, 13], [2, 13], [25, 13], [27, 13], [3, 12], [24, 12], [4, 11], [23, 11], [5, 10], [22, 10], [6, 9], [21, 9], [7, 8], [20, 8], [8, 7], [19, 7], [9, 6], [10, 6], [11, 6], [16, 6], [17, 6], [18, 6]]
@@ -180,27 +181,31 @@ class AlgoStrategy(gamelib.AlgoCore):
             #game_state.attempt_spawn(EMP, self.right_wing_attack_deploy_location, 3)
             game_state.attempt_spawn(PING,self.right_wing_attack_deploy_location[0], game_state.number_affordable(PING)/2)
             game_state.attempt_spawn(PING,self.right_wing_attack_deploy_location[1], game_state.number_affordable(PING))
-    '''def wing_detect(self, game_state):
-        right_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[22,23,24,25,26,27], valid_y=None)
-        left_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[0,1,2,3,4,5], valid_y=None)
-        if right_wing_detect > left_wing_detect:
-            self.wing_attack_index = 1
-                #self.emp_line_strategy(game_state)
-        elif right_wing_detect < left_wing_detect:
-            self.wing_attack_index = 2
-        else:
-            self.wing_attack_index = random.randint(1,3)'''
+
     def detect(self,game_state):
         right_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[22,23,24,25,26,27], valid_y=None)
         left_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[0,1,2,3,4,5], valid_y=None)
-        if right_wing_detect > left_wing_detect:
-            self.attack_index = 1
-                #self.emp_line_strategy(game_state)
+        
+        left_attack_start = [6, 10]
+        left_side_path = game_state.find_path_to_edge(left_attack_start, game_state.game_map.TOP_RIGHT)
+        left_side_end = left_side_path[-1]
+        left_success = game_state.is_on_edge(left_side_end, game_state.game_map.TOP_RIGHT)
+        
+        right_attack_start = [20, 9]
+        right_side_path = game_state.find_path_to_edge(right_attack_start, game_state.game_map.TOP_LEFT)
+        right_side_end = right_side_path[-1]
+        right_success = game_state.is_on_edge(left_side_end, game_state.game_map.TOP_RIGHT)
+        
+        if (left_success and (not(right_success) or len(left_side_path) <= len(right_side_path))):
+            self.attack_index = 4 # right side to enemy's left
+        elif: (right_success and (not(left_success) or len(right_side_path) <= len(left_success))):
+            self.attack_index = 3 # left side to enemy's right
         elif right_wing_detect < left_wing_detect:
-            self.attack_index = 2
+            self.attack_index = 2 # attack right wing
+        elif right_wing_detect > left_wing_detect:
+            self.attack_index = 1 # attack left wing
         else:
             self.attack_index = random.randint(1,3)
-        #self.wing_detect(game_state)
     
     def spawn_scramblers(self, game_state):
         """
@@ -228,9 +233,16 @@ class AlgoStrategy(gamelib.AlgoCore):
                 # Lastly, if we have spare cores, let's build some Encryptors to boost our Pings' health.
                 encryptor_locations = [[13, 2], [14, 2], [13, 3], [14, 3]]
                 game_state.attempt_spawn(ENCRYPTOR, encryptor_locations)'''
+    def do_prep_side_attack(self, game_state, target_edge):
+        ## on prepping side attack
+        if target_edge == game_state.game_map.TOP_RIGHT:
+            game_state.attempt_remove([6, 9])
+        elif target_edge == game_state.game_map.TOP_LEFT:
+            game_state.attempt_remove([21, 9])
+
     def ultimate_strategy(self, game_state):
         """
-                |---------------{overall strategy}-----------------------------------------------------
+        |--------------- {overall strategy} -----------------------------------------------------
         |(basic defence always needs to be checked before doing anything)
         |
         |(if having more than 10 cores, using excessive cores to build tier2 defenses)
@@ -268,15 +280,16 @@ class AlgoStrategy(gamelib.AlgoCore):
         # First, place basic defenses
         if self.attack_next_turn == 0:
             self.spawn_tier1_defenses(game_state)     
-        # this is when we attack
-        else:
+        else:  # this is when we attack
             attack_not_ready = self.attack_defense_ready(game_state)
-        # If the enemy has at least 9 BITS, spawn scramblers to defend
-        #if  game_state.get_resource(BITS, 1) >= 9:
-            #self.spawn_scramblers(game_state) # this scrambler spawn function needs to be improved
+            # If the enemy has at least 9 BITS, spawn scramblers to defend
+            # if game_state.get_resource(BITS, 1) >= 9:
+                # self.spawn_scramblers(game_state) # this scrambler spawn function needs to be improved
             if game_state.get_resource(BITS, 0) >= 13:
                 if attack_not_ready == 0:
                     self.attack(game_state)
+
+        ## detect whether or not to attack
         if game_state.project_future_bits(1,0,game_state.get_resource(BITS,0)-self.number_of_scrambleer_spawn) >= 13:
             self.attack_next_turn = 1
             self.detect(game_state)
@@ -288,6 +301,9 @@ class AlgoStrategy(gamelib.AlgoCore):
                 game_state.attempt.remove(self.left_side)
             else:
                 game_state.attempt.remove(self.right_side)
+        else:
+            self.attack_next_turn = 0
+
         self.spawn_tier1_encryptor(game_state)
         self.spawn_tier2_encryptor(game_state)
         self.spawn_tier2_defenses(game_state)

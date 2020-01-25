@@ -635,3 +635,15 @@ class GameState:
                 if unit.damage_i + unit.damage_f > 0 and unit.player_index != player_index and self.game_map.distance_between_locations(location, location_unit) >= unit.attackRange:
                     attackers.append(unit)
         return attackers
+
+    def is_on_edge(self, location, target_edge):
+        if target_edge == self.game_map.TOP_RIGHT:
+            return location[0] + location[1] == 41
+        elif target_edge == self.game_map.TOP_LEFT:
+            return location[1] - location[0] == 14
+        elif target_edge == self.game_map.BOTTOM_RIGHT:
+            return location[0] + location[1] == 41
+        elif target_edge == self.game_map.BOTTOM_LEFT:
+            return location[0] - location[1] == 14
+        else:
+            return False 
