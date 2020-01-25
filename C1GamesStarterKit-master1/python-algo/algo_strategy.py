@@ -56,6 +56,8 @@ class AlgoStrategy(gamelib.AlgoCore):
         game engine.
         """
         game_state = gamelib.GameState(self.config, turn_state)
+        '''c = gamelib.GameState(self.config, game_state.serialized_string)
+        c.game_map.remove_unit( )'''
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
 
@@ -85,67 +87,100 @@ class AlgoStrategy(gamelib.AlgoCore):
 
 
     # this part is used to add new features from up to down
-    # this variable is used for wing attack. 0 means not attack wings next turn, 1 means attack left wing next turn right means attack right wing next turn, 2 means right, 3 means random.
-    wing_attack_index = 0
-    left_wing_attack_deploy_location = []
-    right_wing_attack_deploy_location = []
+    # index = 0[not attack],1[left_wint],2[right_wing],3[left_side], 4[right_side]
+    attack_index = 0
+    left_wing_attack_deploy_location = [[16,2], [17,3]]
+    right_wing_attack_deploy_location = [[11,2], [10,3]]
     scrambleers_deploy_location1  = []
     scrambleers_deploy_location2  = []
     attack_next_turn = 0
-    on_attack_spawn_pos = []
-    mid_pos = []
+    on_left_wing_attack_spawn_pos = [[0, 13], [2, 13], [25, 13], [26, 13], [27, 13], [3, 12], [24, 12], [4, 11], [23, 11], [5, 10], [22, 10], [6, 9], [21, 9], [7, 8], [20, 8], [8, 7], [19, 7], [9, 6], [10, 6], [11, 6], [16, 6], [17, 6], [18, 6]]
+    on_right_wing_attack_spawn_pos = [[0, 13], [1, 13], [2, 13], [25, 13], [27, 13], [3, 12], [24, 12], [4, 11], [23, 11], [5, 10], [22, 10], [6, 9], [21, 9], [7, 8], [20, 8], [8, 7], [19, 7], [9, 6], [10, 6], [11, 6], [16, 6], [17, 6], [18, 6]]
+    on_left_side_attack_spawn_pos = [[0, 13], [1, 13], [2, 13], [25, 13], [26, 13], [27, 13], [3, 12], [24, 12], [4, 11], [23, 11], [5, 10], [22, 10], [6, 9], [7, 8], [20, 8], [8, 7], [19, 7], [9, 6], [10, 6], [11, 6], [16, 6], [17, 6], [18, 6]]
+    on_right_side_attack_spawn_pos = [[0, 13], [1, 13], [2, 13], [25, 13], [26, 13], [27, 13], [3, 12], [24, 12], [4, 11], [23, 11], [5, 10], [22, 10], [21, 9], [7, 8], [20, 8], [8, 7], [19, 7], [9, 6], [10, 6], [11, 6], [16, 6], [17, 6], [18, 6]]
+    mid_pos = [[13,4], [14,4]]
     number_of_scrambleer_spawn = 0
-    left_corner = []
-    right_corner = []
+    left_corner = [1,13]
+    right_corner = [26,13]
+    left_side = [6,9]
+    right_side = [21,9]
     def spawn_tier1_defenses(self, game_state):
-        tier1_filter_pos = [[0, 13], [1, 13], [2, 13], [4, 13], [23, 13], [25, 13], [26, 13], [27, 13], [3, 12], [5, 12], [22, 12], [24, 12], [4, 11], [23, 11], [5, 10], [22, 10], [6, 9], [21, 9], [7, 8], [20, 8], [8, 7], [19, 7], [9, 6], [18, 6], [10, 5], [11, 5], [12, 5], [15, 5], [16, 5], [17, 5]]
-        tier1_destructor_pos = [[12, 4], [15, 4]]
-        x = game_state.attempt_spawn(FILTER, tier1_filter_pos)
+        tier1_filter_pos = [[0, 13], [1, 13], [2, 13], [4, 13], [23, 13], [25, 13], [26, 13], [27, 13], [3, 12], [5, 12], [22, 12], [24, 12], [4, 11], [23, 11], [5, 10], [22, 10], [6, 9], [21, 9], [7, 8], [20, 8], [8, 7], [19, 7], [9, 6], [10, 6], [11, 6], [16, 6], [17, 6], [18, 6],[11,7], [16,7]]
+        tier1_destructor_pos = [[4, 12], [23, 12], [11, 5], [16, 5], [3, 13], [24, 13], [10, 5], [17, 5]]
         y = game_state.attempt_spawn(DESTRUCTOR, tier1_destructor_pos)
+        x = game_state.attempt_spawn(FILTER, tier1_filter_pos)
         return x + y
     def spawn_tier2_defenses(self, game_state):
         #pleasy enter the pos in symmetric way from up to down
-        tier2_filter_pos = []
-        tier2_destructor_pos = []  
+        upgrade_filter_pos = [[1, 13], [26, 13], [2, 13], [25, 13], [27, 13], [0, 13]]
+        upgrade_destructor_pos = [[4, 12], [23, 12], [11, 5], [16, 5], [3, 13], [24, 13], [10, 5], [17, 5]]
+        tier2_filter_pos = [[6, 12], [21, 12], [7, 11], [20, 11], [8, 10], [19, 10], [9, 9], [18, 9], [10, 8], [17, 8]]
+        tier2_destructor_pos = [[6, 11], [21, 11], [7, 10], [20, 10], [8, 9], [19, 9], [9, 8], [18, 8], [10, 7], [17, 7]]
+        game_state.attempt_upgrade(upgrade_filter_pos)
+        game_state.attempt_upgrade(upgrade_destructor_pos)  
         for x in range(10): # range is the length of filters pos
-            filter_destructor_pair_pos = tier2_filter_pos[x] + tier2_destructor_pos[x]
-            a = game_state.attempt_spawn(FILTER, filter_destructor_pair_pos[0])
-            b = game_state.attempt_spawn(DESTRUCTOR, filter_destructor_pair_pos[1])
-        x = game_state.attempt_spawn(FILTER, tier2_filter_pos)
-        y = game_state.attempt_spawn(DESTRUCTOR, tier2_destructor_pos)
-        return a+b+x+y
-    def spawn_tier3_defenses(self, game_state):
-        #pleasy enter the pos in symmetric way from up to down
-        tier3_filter_pos = []
-        tier3_destructor_pos = []  
+            a = game_state.attempt_spawn(FILTER, tier2_filter_pos[x])
+            b = game_state.attempt_spawn(DESTRUCTOR, tier2_destructor_pos[x])
         for x in range(10): # range is the length of filters pos
-            filter_destructor_pair_pos = tier3_filter_pos[x] + tier3_destructor_pos[x]
-            a = game_state.attempt_spawn(FILTER, filter_destructor_pair_pos[0])
-            b = game_state.attempt_spawn(DESTRUCTOR, filter_destructor_pair_pos[1])
-        x = game_state.attempt_spawn(FILTER, tier3_filter_pos)
-        y = game_state.attempt_spawn(DESTRUCTOR, tier3_destructor_pos)
-        return a+b+x+y
+            c = game_state.attempt_upgrade(tier2_filter_pos[x])
+            d = game_state.attempt_upgrade(tier2_destructor_pos[x])
+        return a+b+c+d
     def spawn_tier1_encryptor(self,game_state):
         #pleasy enter the pos in symmetric way from up to down
-        tier1_encryptor_pos = []
+        tier1_encryptor_pos = [[13, 1], [14, 1], [11, 4], [12, 4], [15, 4]]
         game_state.attempt_spawn(ENCRYPTOR, tier1_encryptor_pos)
     def spawn_tier2_encryptor(self,game_state):
         #pleasy enter the pos in symmetric way from up to down
-        tier2_encryptor_pos = []
+        tier2_encryptor_pos = [[16, 4], [12, 3], [15, 3], [12, 1], [15, 1], [13, 0], [14, 0]]
         game_state.attempt_spawn(ENCRYPTOR, tier2_encryptor_pos)
     def attack(self,game_state):
         self.wing_attack(game_state)
         self.attack_next_turn = 0
-    def wing_attack(self,game_state):
+    def spawn_remove_mid(self,game_state):
         game_state.attempt_spawn(FILTER,self.mid_pos)
-        game_state.attempt_remove(self.mid_pos) # math.floor(game_state.get_resource(BITS,0)-3*gamelib.GameUnit(PING, game_state.config).cost)
-        if self.wing_attack_index == 1:
-            game_state.attempt_spawn(EMP, self.left_wing_attack_deploy_location, 3)
-            game_state.attempt_spawn(PING,self.left_wing_attack_deploy_location,game_state, game_state.number_affordable(PING)) 
-        elif self.wing_attack_index == 2:
-            game_state.attempt_spawn(EMP, self.right_wing_attack_deploy_location, 3)
-            game_state.attempt_spawn(PING,self.left_wing_attack_deploy_location,game_state, game_state.number_affordable(PING))
-    def wing_detect(self, game_state):
+        game_state.attempt_remove(self.mid_pos)
+        x = game_state.attempt_spawn(FILTER,[12,4])
+        if x == 1:
+            game_state.attempt_remove([12,4])
+        y = game_state.attempt_spawn(FILTER,[15,4])
+        if y == 1:
+            game_state.attempt_remove([15,4])
+    def attack_defense_ready(self,game_state):
+        temp = 0
+        if self.attack_index == 1:
+            game_state.attempt_spawn(FILTER, self.on_left_wing_attack_spawn_pos)
+            for pos in self.on_left_wing_attack_spawn_pos:
+                if game_state.contains_stationary_unit(pos) == False:
+                    temp += 1
+        if self.attack_index == 2:
+            game_state.attempt_spawn(FILTER, self.on_left_wing_attack_spawn_pos)
+            for pos in self.on_left_wing_attack_spawn_pos:
+                if game_state.contains_stationary_unit(pos) == False:
+                    temp += 1
+        if self.attack_index == 3:
+            game_state.attempt_spawn(FILTER, self.on_left_wing_attack_spawn_pos)
+            for pos in self.on_left_wing_attack_spawn_pos:
+                if game_state.contains_stationary_unit(pos) == False:
+                    temp += 1
+        if self.attack_index == 4:
+            game_state.attempt_spawn(FILTER, self.on_left_wing_attack_spawn_pos)
+            for pos in self.on_left_wing_attack_spawn_pos:
+                if game_state.contains_stationary_unit(pos) == False:
+                    temp += 1
+        return temp
+
+
+    def wing_attack(self,game_state):
+        self.spawn_remove_mid(game_state)
+        if self.attack_index == 1:
+            #game_state.attempt_spawn(EMP, self.left_wing_attack_deploy_location, 3)
+            game_state.attempt_spawn(PING,self.left_wing_attack_deploy_location[0], game_state.number_affordable(PING)/2)
+            game_state.attempt_spawn(PING,self.left_wing_attack_deploy_location[1], game_state.number_affordable(PING))  
+        else:
+            #game_state.attempt_spawn(EMP, self.right_wing_attack_deploy_location, 3)
+            game_state.attempt_spawn(PING,self.right_wing_attack_deploy_location[0], game_state.number_affordable(PING)/2)
+            game_state.attempt_spawn(PING,self.right_wing_attack_deploy_location[1], game_state.number_affordable(PING))
+    '''def wing_detect(self, game_state):
         right_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[22,23,24,25,26,27], valid_y=None)
         left_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[0,1,2,3,4,5], valid_y=None)
         if right_wing_detect > left_wing_detect:
@@ -154,7 +189,19 @@ class AlgoStrategy(gamelib.AlgoCore):
         elif right_wing_detect < left_wing_detect:
             self.wing_attack_index = 2
         else:
-            self.wing_attack_index = random.randint(1,3)
+            self.wing_attack_index = random.randint(1,3)'''
+    def detect(self,game_state):
+        right_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[22,23,24,25,26,27], valid_y=None)
+        left_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[0,1,2,3,4,5], valid_y=None)
+        if right_wing_detect > left_wing_detect:
+            self.attack_index = 1
+                #self.emp_line_strategy(game_state)
+        elif right_wing_detect < left_wing_detect:
+            self.attack_index = 2
+        else:
+            self.attack_index = random.randint(1,3)
+        #self.wing_detect(game_state)
+    
     def spawn_scramblers(self, game_state):
         """
         Send out Scramblers at random locations to defend our base from enemy moving units.
@@ -221,31 +268,29 @@ class AlgoStrategy(gamelib.AlgoCore):
         # First, place basic defenses
         if self.attack_next_turn == 0:
             self.spawn_tier1_defenses(game_state)     
-        # Now build tier2 defenses
+        # this is when we attack
         else:
-            game_state.attempt_spawn(PING, self.on_attack_spawn_pos)
-        for pos in self.on_attack_spawn_pos:
-            if game_state.attempt_spawn(PING, pos):
-                attack_not_ready += 1
+            attack_not_ready = self.attack_defense_ready(game_state)
         # If the enemy has at least 9 BITS, spawn scramblers to defend
-        if  game_state.get_resource(BITS, 1) >= 9:
-            self.spawn_scramblers(game_state) # this scrambler spawn function needs to be improved
-        if self.attack_next_turn == 1:
-            if game_state.get_resource(BITS, 0) >= 15:
+        #if  game_state.get_resource(BITS, 1) >= 9:
+            #self.spawn_scramblers(game_state) # this scrambler spawn function needs to be improved
+            if game_state.get_resource(BITS, 0) >= 13:
                 if attack_not_ready == 0:
                     self.attack(game_state)
-        if game_state.project_future_bits(1,0,game_state.get_resource(BITS,0)-self.number_of_scrambleer_spawn) >= 15:
+        if game_state.project_future_bits(1,0,game_state.get_resource(BITS,0)-self.number_of_scrambleer_spawn) >= 13:
             self.attack_next_turn = 1
-            self.wing_detect(game_state)
-            if self.wing_attack_index == 1:
+            self.detect(game_state)
+            if self.attack_index == 1:
                 game_state.attempt.remove(self.left_corner)
-            else:
+            elif self.attack_index == 2:
                 game_state.attempt.remove(self.right_corner)
-        self.spawn_tier2_defenses(game_state)
-        #self.build_reactive_defense(game_state)   this was used for building reactive defenses
+            elif self.attack_index == 3:
+                game_state.attempt.remove(self.left_side)
+            else:
+                game_state.attempt.remove(self.right_side)
         self.spawn_tier1_encryptor(game_state)
-        #attack when tier1 is full and having more than 15 bits
         self.spawn_tier2_encryptor(game_state)
+        self.spawn_tier2_defenses(game_state)
             
     # end of adding new features
 
