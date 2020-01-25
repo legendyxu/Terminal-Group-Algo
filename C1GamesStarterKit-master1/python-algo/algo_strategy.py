@@ -183,8 +183,8 @@ class AlgoStrategy(gamelib.AlgoCore):
             game_state.attempt_spawn(PING,self.right_wing_attack_deploy_location[1], game_state.number_affordable(PING))
 
     def detect(self,game_state):
-        right_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[22,23,24,25,26,27], valid_y=None)
-        left_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[0,1,2,3,4,5], valid_y=None)
+        right_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[23,24,25,26,27], valid_y=None)
+        left_wing_detect = self.detect_enemy_unit(game_state, unit_type=DESTRUCTOR, valid_x=[0,1,2,3,4], valid_y=None)
         
         left_attack_start = [6, 10]
         left_side_path = game_state.find_path_to_edge(left_attack_start, game_state.game_map.TOP_RIGHT)
@@ -198,7 +198,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         
         if (left_success and (not(right_success) or len(left_side_path) <= len(right_side_path))):
             self.attack_index = 4 # right side to enemy's left
-        elif: (right_success and (not(left_success) or len(right_side_path) <= len(left_success))):
+        elif (right_success and (not(left_success) or len(right_side_path) <= len(left_side_path))):
             self.attack_index = 3 # left side to enemy's right
         elif right_wing_detect < left_wing_detect:
             self.attack_index = 2 # attack right wing
