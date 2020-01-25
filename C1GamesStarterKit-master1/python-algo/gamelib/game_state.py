@@ -642,8 +642,8 @@ class GameState:
         elif target_edge == self.game_map.TOP_LEFT:
             return location[1] - location[0] == 14
         elif target_edge == self.game_map.BOTTOM_RIGHT:
-            return location[0] + location[1] == 41
-        elif target_edge == self.game_map.BOTTOM_LEFT:
             return location[0] - location[1] == 14
+        elif target_edge == self.game_map.BOTTOM_LEFT:
+            return location[0] + location[1] == 13
         else:
             return False 
